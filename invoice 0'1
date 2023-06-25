@@ -1,0 +1,92 @@
+import datetime
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+
+
+class ResumenPago:
+    def __init__(self):
+        self.coste_hora = 35
+        self.dias = []
+        self.total_horas = 0
+
+    def agregar_dia_trabajado(self, dia, lugar, horas_trabajadas):
+        fecha = datetime.datetime.strptime(dia, "%d/%m/%Y").date()
+        self.dias.append({'fecha': fecha, 'lugar': lugar, 'horas': horas_trabajadas})
+        self.total_horas += horas_trabajadas
+
+    def generar_resumen_pago(self):
+        resumen_pago = """
+        Factura
+        --------------------------------------
+        """
+
+        for dia in self.dias:
+            fecha = dia['fecha'].strftime("%d/%m/%Y")
+            lugar = dia['lugar']
+            horas = dia['horas']
+            resumen_pago += f"{fecha} | {lugar} | {horas} horas\n"
+
+        resumen_pago += "--------------------------------------\n"
+
+        total_pago = self.total_horas * self.coste_hora
+        resumen_pago += f"Total horas trabajadas: {self.total_horas}\n"
+        resumen_pago += f"Total a pagar: ${total_pago}"
+
+        return resumen_pago
+
+    def generar_factura(self):
+        # Aquí puedes implementar la lógica para generar la factura en el formato deseado
+        pass
+
+
+class ResumenPagoApp(App):
+    def __init__(self):
+        super(ResumenPagoApp, self).__init__()
+        self.resumen = ResumenPago()
+
+    def build(self):
+        layout = BoxLayout(orientation='vertical', padding=10)
+
+        self.date_input = TextInput(hint_text='Ingrese la fecha (formato DD/MM/AAAA)')
+        self.place_input = TextInput(hint_text='Ingrese el lugar donde trabajó')
+        self.hours_input = TextInput(hint_text='Ingrese las horas trabajadas')
+        self.add_button = Button(text='Agregar día', on_press=self.add_day)
+        self.generate_button = Button(text='Generar factura', on_press=self.generate_invoice)
+        self.summary_label = Label(text='', size_hint=(1, 0.6))
+
+        layout.add_widget(self.date_input)
+        layout.add_widget(self.place_input)
+        layout.add_widget(self.hours_input)
+        layout.add_widget(self.add_button)
+        layout.add_widget(self.generate_button)
+        layout.add_widget(self.summary_label)
+
+        return layout
+
+    def add_day(self, instance):
+        dia = self.date_input.text.strip()
+        lugar = self.place_input.text.strip()
+        horas_trabajadas = int(self.hours_input.text.strip())
+
+        if dia and lugar and horas_trabajadas:
+            self.resumen.agregar_dia_trabajado(dia, lugar, horas_trabajadas)
+            self.update_summary()
+
+            self.date_input.text = ''
+            self.place_input.text = ''
+            self.hours_input.text = ''
+
+    def generate_invoice(self, instance):
+        self.resumen.generar_factura()
+        self.summary_label.text = "Factura generada"
+
+    def update_summary(self):
+        resumen_pago = self.resumen.generar_resumen_pago()
+        self.summary_label.text = resumen_pago
+
+
+if __name__ == '__main__':
+    ResumenPagoApp().run()
